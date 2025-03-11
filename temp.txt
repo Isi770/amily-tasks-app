@@ -5,3 +5,182 @@ mkdir -p family-tasks-app/server/models
 mkdir -p family-tasks-app/server/routes
 mkdir -p family-tasks-app/server/controllers
 mkdir -p family-tasks-app/server/middleware
+
+client/src/App.tsx ----
+import React from 'react';
+import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
+import Login from './components/auth/Login';
+import Child from './components/profiles/Child';
+import Parent from './components/dashboard/Parent';
+
+const App = () => {
+  return (
+    <Router>
+      <Switch>
+        <Route exact path="/" component={Login} />
+        <Route path="/child/:id" component={Child} />
+        <Route path="/parent" component={Parent} />
+      </Switch>
+    </Router>
+  );
+};
+
+export default App;
+
+client/src/index.tsx
+import React from 'react';
+import ReactDOM from 'react-dom';
+import App from './App';
+import './index.css';
+
+ReactDOM.render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>,
+  document.getElementById('root')
+);
+
+server/server.js
+const express = require('express');
+const mongoose = require('mongoose');
+const cors = require('cors');
+const path = require('path');
+require('dotenv').config();
+
+// יבוא מודלים
+require('./models');
+
+const app = express();
+
+// Middleware
+app.use(cors());
+app.use(express.json());
+
+// חיבור למסד נתונים
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/family_tasks_app';
+mongoose.connect(MONGO_URI)
+  .then(() => console.log('התחברות למסד הנתונים בוצעה בהצלחה'))
+  .catch(err => console.error('שגיאה בהתחברות למסד הנתונים:', err));
+
+// נתיבי API בסיסיים
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', message: 'המערכת פועלת כראוי!' });
+});
+
+// הגשת קבצים סטטיים בסביבת ייצור
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, '../client/build')));
+  
+  app.get('*', (req, res) => {
+    res.sendFile(path.resolve(__dirname, '../client/build', 'index.html'));
+  });
+}
+
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`השרת פועל בפורט ${PORT}`));
+
+package.json
+{
+  "name": "family-tasks-app",
+  "version": "1.0.0",
+  "description": "מערכת ניהול משימות לילדים",
+  "main": "server/server.js",
+  "scripts": {
+    "start": "node server/server.js",
+    "server": "nodemon server/server.js",
+    "client": "npm start --prefix client",
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "build": "npm run build --prefix client",
+    "install-all": "npm install && npm install --prefix client"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-validator": "^7.0.1",
+    "jsonwebtoken": "^9.0.1",
+    "mongoose": "^7.4.1"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.0",
+    "nodemon": "^3.0.1"
+  }
+}
+
+
+.env
+PORT=5000
+NODE_ENV=development
+MONGO_URI=mongodb://localhost:27017/family_tasks_app
+JWT_SECRET=your_jwt_secret_key_change_this
+
+
+client/package.json
+{
+  "name": "family-tasks-client",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@types/node": "^16.11.47",
+    "@types/react": "^18.0.15",
+    "@types/react-dom": "^18.0.6",
+    "@types/react-router-dom": "^5.3.3",
+    "axios": "^1.4.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^5.3.4",
+    "react-scripts": "5.0.1",
+    "tailwindcss": "^3.3.3",
+    "typescript": "^4.7.4"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "proxy": "http://localhost:5000"
+}
+
+
+client/tsconfig.json
+{
+  "compilerOptions": {
+    "target": "es5",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "noFallthroughCasesInSwitch": true,
+    "module": "esnext",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx"
+  },
+  "include": ["src"]
+}
+
