@@ -1,0 +1,7 @@
+mkdir -p family-tasks-app/client/src/components/auth
+mkdir -p family-tasks-app/client/src/components/profiles
+mkdir -p family-tasks-app/client/src/components/dashboard
+mkdir -p family-tasks-app/server/models
+mkdir -p family-tasks-app/server/routes
+mkdir -p family-tasks-app/server/controllers
+mkdir -p family-tasks-app/server/middleware
